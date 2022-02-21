@@ -247,7 +247,7 @@ CCFLAGS   := $($(target)_CCFLAGS)
 LINKFLAGS := $($(target)_LINKFLAGS) 
 LIBNAME   := $($(target)_LIBNAME)
 SQLITE_FLAGS := $($(target)_SQLITE_FLAGS)
-SQLITE_AMAL_PREFIX = sqlite-amalgamation-$(shell ./amalgamation_version.sh $(version))
+SQLITE_AMAL_PREFIX = sqleet-v0.31.1
 SQLITE_OLD_AMAL_PREFIX = sqlite-amalgamation-$(subst .,_,$(version))
 CCFLAGS := $(CCFLAGS) 
 ifneq ($(jni_include),)

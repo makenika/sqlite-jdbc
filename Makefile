@@ -28,14 +28,13 @@ CCFLAGS:= -I$(SQLITE_OUT) -I$(SQLITE_INCLUDE) $(CCFLAGS)
 
 $(SQLITE_ARCHIVE):
 	@mkdir -p $(@D)
-	curl -L --max-redirs 0 -f -o$@ https://www.sqlite.org/2021/$(SQLITE_AMAL_PREFIX).zip || \
-	curl -L --max-redirs 0 -f -o$@ https://www.sqlite.org/2020/$(SQLITE_AMAL_PREFIX).zip || \
-	curl -L --max-redirs 0 -f -o$@ https://www.sqlite.org/$(SQLITE_AMAL_PREFIX).zip || \
-	curl -L --max-redirs 0 -f -o$@ https://www.sqlite.org/$(SQLITE_OLD_AMAL_PREFIX).zip
+	curl -L --max-redirs 1 -f -o$@ https://github.com/resilar/sqleet/releases/download/v0.31.1/sqleet-v0.31.1-amalgamation.zip
 
 $(SQLITE_UNPACKED): $(SQLITE_ARCHIVE)
 	unzip -qo $< -d $(TARGET)/tmp.$(version)
 	(mv $(TARGET)/tmp.$(version)/$(SQLITE_AMAL_PREFIX) $(TARGET) && rmdir $(TARGET)/tmp.$(version)) || mv $(TARGET)/tmp.$(version)/ $(TARGET)/$(SQLITE_AMAL_PREFIX)
+	cp $(TARGET)/$(SQLITE_AMAL_PREFIX)/sqleet.h $(TARGET)/$(SQLITE_AMAL_PREFIX)/sqlite3.h
+	cp $(TARGET)/$(SQLITE_AMAL_PREFIX)/sqleet.c $(TARGET)/$(SQLITE_AMAL_PREFIX)/sqlite3.c
 	touch $@
 
 
@@ -80,6 +79,7 @@ $(SQLITE_OUT)/sqlite3.o : $(SQLITE_UNPACKED)
 	    -DSQLITE_ENABLE_FTS5 \
 	    -DSQLITE_ENABLE_JSON1 \
 	    -DSQLITE_ENABLE_RTREE \
+	    -DSQLITE_ENABLE_GEOPOLY \
 	    -DSQLITE_ENABLE_STAT4 \
 	    -DSQLITE_THREADSAFE=1 \
 	    -DSQLITE_DEFAULT_MEMSTATUS=0 \
@@ -111,7 +111,7 @@ NATIVE_TARGET_DIR:=$(TARGET)/classes/org/sqlite/native/$(OS_NAME)/$(OS_ARCH)
 NATIVE_DLL:=$(NATIVE_DIR)/$(LIBNAME)
 
 # For cross-compilation, install docker. See also https://github.com/dockcross/dockcross
-native-all: native win32 win64 win-armv7 win-arm64 mac64 linux32 linux64 freebsd32 freebsd64 freebsd-arm64 linux-arm linux-armv6 linux-armv7 linux-arm64 linux-android-arm linux-android-arm64 linux-android-x86 linux-android-x64 linux-ppc64 alpine-linux64
+native-all: native win32 win64 win-armv7 win-arm64 mac64 linux32 linux64 freebsd32 freebsd64 freebsd-arm64 linux-arm linux-armv6 linux-armv7 linux-arm64 linux-android-arm linux-android-arm64 linux-android-x86 linux-android-x64 alpine-linux64
 
 native: $(NATIVE_DLL)
 
