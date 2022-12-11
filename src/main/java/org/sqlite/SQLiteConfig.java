@@ -170,6 +170,7 @@ public class SQLiteConfig {
         pragmaParams.remove(Pragma.DATE_PRECISION.pragmaName);
         pragmaParams.remove(Pragma.DATE_CLASS.pragmaName);
         pragmaParams.remove(Pragma.DATE_STRING_FORMAT.pragmaName);
+        pragmaParams.remove(Pragma.CIPHER.pragmaName);
         pragmaParams.remove(Pragma.PASSWORD.pragmaName);
         pragmaParams.remove(Pragma.HEXKEY_MODE.pragmaName);
         pragmaParams.remove(Pragma.LIMIT_ATTACHED.pragmaName);
@@ -192,6 +193,13 @@ public class SQLiteConfig {
 
         Statement stat = conn.createStatement();
         try {
+            if (pragmaTable.containsKey(Pragma.CIPHER.pragmaName)) {
+                String cipher = pragmaTable.getProperty(Pragma.CIPHER.pragmaName);
+                if (cipher != null && !cipher.isEmpty()) {
+                    stat.execute("pragma cipher = " + cipher);
+                }
+            }
+
             if (pragmaTable.containsKey(Pragma.PASSWORD.pragmaName)) {
                 String password = pragmaTable.getProperty(Pragma.PASSWORD.pragmaName);
                 if (password != null && !password.isEmpty()) {
@@ -541,6 +549,10 @@ public class SQLiteConfig {
                 "busy_timeout",
                 "Sets a busy handler that sleeps for a specified amount of time when a table is locked",
                 null),
+        CIPHER(
+                "cipher",
+                "Cipher to use (SQLite3 Multiple Ciphers)",
+                new String[] {"aes128cbc", "aes256cbc", "chacha20", "sqlcipher", "rc4"}),
         HEXKEY_MODE("hexkey_mode", "Mode of the secret key", toStringArray(HexKeyMode.values())),
         PASSWORD("password", "Database password", null),
 
