@@ -27,22 +27,18 @@ endif
 
 SQLITE_INCLUDE := $(shell dirname "$(SQLITE_HEADER)")
 
-CCFLAGS:= -I$(SQLITE_OUT) -I$(SQLITE_INCLUDE) $(CCFLAGS)
+CCFLAGS:= -I$(SQLITE_OUT) -I$(SQLITE_INCLUDE) $(CCFLAGS) -std=c99
 
 $(SQLITE_ARCHIVE):
 	@mkdir -p $(@D)
-	curl -L --max-redirs 0 -f -o$@ https://www.sqlite.org/2025/$(SQLITE_AMAL_PREFIX).zip || \
-	curl -L --max-redirs 0 -f -o$@ https://www.sqlite.org/2024/$(SQLITE_AMAL_PREFIX).zip || \
-	curl -L --max-redirs 0 -f -o$@ https://www.sqlite.org/2023/$(SQLITE_AMAL_PREFIX).zip || \
-	curl -L --max-redirs 0 -f -o$@ https://www.sqlite.org/2022/$(SQLITE_AMAL_PREFIX).zip || \
-	curl -L --max-redirs 0 -f -o$@ https://www.sqlite.org/2021/$(SQLITE_AMAL_PREFIX).zip || \
-	curl -L --max-redirs 0 -f -o$@ https://www.sqlite.org/2020/$(SQLITE_AMAL_PREFIX).zip || \
-	curl -L --max-redirs 0 -f -o$@ https://www.sqlite.org/$(SQLITE_AMAL_PREFIX).zip || \
-	curl -L --max-redirs 0 -f -o$@ https://www.sqlite.org/$(SQLITE_OLD_AMAL_PREFIX).zip
+	curl -L --max-redirs 1 -f -o$@ https://github.com/utelle/SQLite3MultipleCiphers/releases/download/v$(sqlite_mc_version)/$(SQLITE_AMAL_PREFIX).zip
+
 
 $(SQLITE_UNPACKED): $(SQLITE_ARCHIVE)
 	unzip -qo $< -d $(TARGET)/tmp.$(version)
 	(mv $(TARGET)/tmp.$(version)/$(SQLITE_AMAL_PREFIX) $(TARGET) && rmdir $(TARGET)/tmp.$(version)) || mv $(TARGET)/tmp.$(version)/ $(TARGET)/$(SQLITE_AMAL_PREFIX)
+	mv $(TARGET)/$(SQLITE_AMAL_PREFIX)/sqlite3mc_amalgamation.h $(TARGET)/$(SQLITE_AMAL_PREFIX)/sqlite3.h
+	mv $(TARGET)/$(SQLITE_AMAL_PREFIX)/sqlite3mc_amalgamation.c $(TARGET)/$(SQLITE_AMAL_PREFIX)/sqlite3.c
 	touch $@
 
 $(JAVA_CLASSPATH):
@@ -88,6 +84,7 @@ $(SQLITE_OUT)/sqlite3.o : $(SQLITE_UNPACKED)
 	    -DSQLITE_ENABLE_FTS3_PARENTHESIS \
 	    -DSQLITE_ENABLE_FTS5 \
 	    -DSQLITE_ENABLE_RTREE \
+	    -DSQLITE_ENABLE_GEOPOLY \
 	    -DSQLITE_ENABLE_STAT4 \
 	    -DSQLITE_ENABLE_DBSTAT_VTAB \
 	    -DSQLITE_ENABLE_MATH_FUNCTIONS \
@@ -122,7 +119,7 @@ NATIVE_TARGET_DIR:=$(TARGET)/classes/org/sqlite/native/$(OS_NAME)/$(OS_ARCH)
 NATIVE_DLL:=$(NATIVE_DIR)/$(LIBNAME)
 
 # For cross-compilation, install docker. See also https://github.com/dockcross/dockcross
-native-all: native win32 win64 win-armv7 win-arm64 mac64-signed mac-arm64-signed linux32 linux64 freebsd32 freebsd64 freebsd-arm64 linux-arm linux-armv6 linux-armv7 linux-arm64 linux-android-arm linux-android-arm64 linux-android-x86 linux-android-x64 linux-ppc64 linux-musl32 linux-musl64 linux-musl-arm64 linux-riscv64
+native-all: native win32 win64 win-armv7 win-arm64 mac64-signed mac-arm64-signed linux64 linux-arm linux-armv6 linux-armv7 linux-arm64 linux-android-arm linux-android-arm64 linux-android-x86 linux-android-x64 linux-ppc64 linux-musl32 linux-musl64 linux-musl-arm64
 
 native: $(NATIVE_DLL)
 
@@ -148,7 +145,7 @@ linux32: $(SQLITE_UNPACKED) jni-header
 	docker run $(DOCKER_RUN_OPTS) -v $$PWD:/work xerial/centos5-linux-x86 bash -c 'make clean-native native OS_NAME=Linux OS_ARCH=x86'
 
 linux64: $(SQLITE_UNPACKED) jni-header
-	docker run $(DOCKER_RUN_OPTS) -v $$PWD:/work xerial/centos5-linux-x86_64 bash -c 'make clean-native native OS_NAME=Linux OS_ARCH=x86_64'
+	docker run $(DOCKER_RUN_OPTS) -v $$PWD:/work --workdir /work gcc:12.2.0-bullseye bash -c 'make clean-native native OS_NAME=Linux OS_ARCH=x86_64'
 
 freebsd32: $(SQLITE_UNPACKED) jni-header
 	docker run $(DOCKER_RUN_OPTS) -v $$PWD:/workdir empterdose/freebsd-cross-build:9.3 sh -c 'apk add bash; apk add openjdk8; apk add perl; make clean-native native OS_NAME=FreeBSD OS_ARCH=x86 CROSS_PREFIX=i386-freebsd9-'
