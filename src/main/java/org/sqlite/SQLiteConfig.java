@@ -173,6 +173,8 @@ public class SQLiteConfig {
         pragmaParams.remove(Pragma.CIPHER.pragmaName);
         pragmaParams.remove(Pragma.PASSWORD.pragmaName);
         pragmaParams.remove(Pragma.HEXKEY_MODE.pragmaName);
+        pragmaParams.remove(Pragma.REKEY.pragmaName);
+        pragmaParams.remove(Pragma.REKEY_MODE.pragmaName);
         pragmaParams.remove(Pragma.LIMIT_ATTACHED.pragmaName);
         pragmaParams.remove(Pragma.LIMIT_COLUMN.pragmaName);
         pragmaParams.remove(Pragma.LIMIT_COMPOUND_SELECT.pragmaName);
@@ -211,6 +213,22 @@ public class SQLiteConfig {
                         passwordPragma = "pragma key = \"x'%s'\"";
                     } else {
                         passwordPragma = "pragma key = '%s'";
+                    }
+                    stat.execute(String.format(passwordPragma, password.replace("'", "''")));
+                    stat.execute("select 1 from sqlite_schema");
+                }
+            }
+
+            if (pragmaTable.containsKey(Pragma.REKEY.pragmaName)) {
+                String password = pragmaTable.getProperty(Pragma.REKEY.pragmaName);
+                if (password != null) {
+                    String hexkeyMode = pragmaTable.getProperty(Pragma.REKEY_MODE.pragmaName);
+                    String passwordPragma;
+                    // (no support for HexKeyMode.SSE)
+                    if (HexKeyMode.SQLCIPHER.name().equalsIgnoreCase(hexkeyMode)) {
+                        passwordPragma = "pragma rekey = \"x'%s'\"";
+                    } else {
+                        passwordPragma = "pragma rekey = '%s'";
                     }
                     stat.execute(String.format(passwordPragma, password.replace("'", "''")));
                     stat.execute("select 1 from sqlite_schema");
@@ -555,6 +573,12 @@ public class SQLiteConfig {
                 new String[] {"aes128cbc", "aes256cbc", "chacha20", "sqlcipher", "rc4"}),
         HEXKEY_MODE("hexkey_mode", "Mode of the secret key", toStringArray(HexKeyMode.values())),
         PASSWORD("password", "Database password", null),
+
+        REKEY("rekey", "Change database password", null),
+        REKEY_MODE(
+                "rekey_mode",
+                "Mode of the secret re-key",
+                toStringArray(new HexKeyMode[] {HexKeyMode.NONE, HexKeyMode.SQLCIPHER})),
 
         // extensions: "fake" pragmas to allow conformance with JDBC
         JDBC_EXPLICIT_READONLY(
